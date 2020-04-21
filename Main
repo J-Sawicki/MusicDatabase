@@ -1,0 +1,204 @@
+import com.company.model.Artist;
+import com.company.model.DataSource;
+import com.company.model.SongArtist;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+
+public class Main {
+    public static DataSource dataSource = new DataSource();
+    public static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        if (!dataSource.open()) {
+            System.out.println("Can't open datasource");
+            return;
+        }
+        dataSource.createViewForSongArtist();
+        System.out.println("Welcome to music database!");
+        printMenu();
+        int choice;
+        boolean run = true;
+        while (run) {
+            System.out.println("Please select option: ");
+            choice = scanner.nextInt();
+            scanner.nextLine();
+            switch (choice) {
+                case 1:
+                    seeArtists();
+                    break;
+                case 2:
+                    seeAlbumsForGivenArtist();
+                    break;
+                case 3:
+                    seeArtistAndAlbumForSong();
+                    break;
+                case 4:
+                    insertSong();
+                    break;
+                case 5:
+                    countRows();
+                    break;
+                case 6:
+                    seeMetaData();
+                    break;
+                case 7:
+                    System.out.println("Bye!");
+                    dataSource.close();
+                    scanner.close();
+                    run = false;
+            }
+
+        }
+    }
+
+    public static void printMenu() {
+        System.out.println("0 - print instruction");
+        System.out.println("1 - see artists");
+        System.out.println("2 - see albums for given artist");
+        System.out.println("3 - see information about an artist and album for given song");
+        System.out.println("4 - insert new song into database");
+        System.out.println("5 - get count for given table");
+        System.out.println("6 - see extra information about given table");
+        System.out.println("7 - quit application");
+    }
+
+    public static void seeArtists() {
+        System.out.println("Select ordering");
+        System.out.println("1 - none");
+        System.out.println("2 - ascending");
+        System.out.println("3 - descending");
+        int order = scanner.nextInt();
+        scanner.nextLine();
+        List<Artist> artists;
+        switch (order) {
+            case 1:
+                artists = dataSource.queryArtists(DataSource.ORDER_BY_NONE);
+                break;
+            case 2:
+                artists = dataSource.queryArtists(DataSource.ORDER_BY_ASC);
+                break;
+            case 3:
+                artists = dataSource.queryArtists(DataSource.ORDER_BY_DESC);
+                break;
+            default:
+                System.out.println("Please select from given options");
+                artists = null;
+                break;
+        }
+        if (artists == null) {
+            System.out.println("No artists!");
+            return;
+        }
+        for (Artist artist : artists) {
+            System.out.println("ID: " + artist.getId() + " | Name: " + artist.getName());
+        }
+    }
+
+    public static void seeAlbumsForGivenArtist() {
+        System.out.println("Enter artist name:");
+        String artist = scanner.nextLine();
+        System.out.println("Select ordering");
+        System.out.println("1 - none");
+        System.out.println("2 - ascending");
+        System.out.println("3 - descending");
+        int order = scanner.nextInt();
+        scanner.nextLine();
+        List<String> albumsByArtist;
+        switch (order) {
+            case 1:
+                albumsByArtist = dataSource.queryAlbumsForArtist(artist, DataSource.ORDER_BY_NONE);
+                break;
+            case 2:
+                albumsByArtist = dataSource.queryAlbumsForArtist(artist, DataSource.ORDER_BY_ASC);
+                break;
+            case 3:
+                albumsByArtist = dataSource.queryAlbumsForArtist(artist, DataSource.ORDER_BY_DESC);
+                break;
+            default:
+                System.out.println("Please select from given options");
+                albumsByArtist = null;
+                break;
+        }
+        if (albumsByArtist == null) {
+            System.out.println("No albums for given artist!");
+            return;
+        }
+        int i = 0;
+        for (String album : albumsByArtist) {
+            i++;
+            System.out.println(i + " | " + album);
+        }
+    }
+
+    public static void seeArtistAndAlbumForSong() {
+        System.out.println("Enter a song title: ");
+        String title = scanner.nextLine();
+        ArrayList<SongArtist> songsFromView = dataSource.querySongInfoView(title);
+        if (songsFromView == null) {
+            System.out.println("No such song found!");
+            return;
+        }
+        for (SongArtist artist : songsFromView) {
+            System.out.println(artist.getArtistName() + " | " + artist.getAlbumName() + " | " + artist.getTrack());
+        }
+    }
+
+    public static void insertSong() {
+        System.out.println("Enter song's title:");
+        String title = scanner.nextLine();
+        System.out.println("Enter artist: ");
+        String artist = scanner.nextLine();
+        System.out.println("Enter album: ");
+        String album = scanner.nextLine();
+        System.out.println("Enter track number: ");
+        int track = scanner.nextInt();
+        scanner.nextLine();
+
+        dataSource.insertSong(title, artist, album, track);
+    }
+
+    public static void countRows() {
+        System.out.println("Select table: ");
+        System.out.println("1 - artists");
+        System.out.println("2 - songs");
+        System.out.println("3 - albums");
+        int choice = scanner.nextInt();
+        switch (choice) {
+            case 1:
+                System.out.println(dataSource.getCount(DataSource.TABLE_ARTISTS));
+                break;
+            case 2:
+                System.out.println(dataSource.getCount(DataSource.TABLE_SONGS));
+                break;
+            case 3:
+                System.out.println(dataSource.getCount(DataSource.TABLE_ALBUMS));
+                break;
+            default:
+                System.out.println("Please select from given options!");
+        }
+    }
+
+    public static void seeMetaData() {
+        System.out.println("Select table: ");
+        System.out.println("1 - artists");
+        System.out.println("2 - songs");
+        System.out.println("3 - albums");
+        int choice = scanner.nextInt();
+        switch (choice) {
+            case 1:
+                dataSource.queryTableMetaData(DataSource.TABLE_ARTISTS);
+                break;
+            case 2:
+                dataSource.queryTableMetaData(DataSource.TABLE_SONGS);
+                break;
+            case 3:
+                dataSource.queryTableMetaData(DataSource.TABLE_ALBUMS);
+                break;
+            default:
+                System.out.println("Please select from given options!");
+        }
+    }
+}
