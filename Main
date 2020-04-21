@@ -26,6 +26,9 @@ public class Main {
             choice = scanner.nextInt();
             scanner.nextLine();
             switch (choice) {
+                case 0:
+                    printMenu();
+                    break;
                 case 1:
                     seeArtists();
                     break;
